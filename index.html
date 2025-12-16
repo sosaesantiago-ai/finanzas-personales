@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finanzas — Dashboard + Registros</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1b33;
+      --card2:#0c1730;
+      --text:#eaf0ff;
+      --muted:#a9b6d6;
+      --line:rgba(255,255,255,.10);
+      --accent:#7aa7ff;
+      --ok:#57d38c;
+      --bad:#ff6b6b;
+      --warn:#ffd166;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(122,167,255,.22), transparent 60%),
+                  radial-gradient(1200px 600px at 90% 20%, rgba(87,211,140,.16), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:50;
+      background: linear-gradient(180deg, rgba(11,18,32,.92), rgba(11,18,32,.68));
+      backdrop-filter: blur(10px);
+      padding:14px 18px; border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand b{font-size:16px; letter-spacing:.2px}
+    .brand span{font-size:12px;color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    select, input, button, textarea{
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+    }
+    input[type="date"]{padding:9px 12px}
+    input::placeholder{color:rgba(234,240,255,.45)}
+    button{
+      cursor:pointer;
+      transition:.15s transform ease, .15s opacity ease;
+    }
+    button:hover{transform: translateY(-1px)}
+    button:active{transform: translateY(0px); opacity:.9}
+    .btnPrimary{background: rgba(122,167,255,.22); border-color: rgba(122,167,255,.35)}
+    .btnOk{background: rgba(87,211,140,.18); border-color: rgba(87,211,140,.35)}
+    .btnBad{background: rgba(255,107,107,.18); border-color: rgba(255,107,107,.35)}
+    .btnWarn{background: rgba(255,209,102,.18); border-color: rgba(255,209,102,.35)}
+    .btnGhost{background: transparent}
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      cursor:pointer;
+      user-select:none;
+      transition:.15s transform ease, .15s background ease;
+    }
+    .chip:hover{transform: translateY(-1px); background: rgba(255,255,255,.08)}
+    .chip.active{border-color: rgba(122,167,255,.55); background: rgba(122,167,255,.18)}
+    .grid{display:grid; gap:12px}
+    @media(min-width:900px){
+      .grid.cols2{grid-template-columns: 1.2fr .8fr}
+      .grid.cols3{grid-template-columns: repeat(3, 1fr)}
+      .grid.cols4{grid-template-columns: repeat(4, 1fr)}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .card h3{margin:0 0 10px 0;font-size:14px;color:var(--muted);font-weight:600}
+    .big{
+      font-size:26px;
+      font-weight:800;
+      letter-spacing:.2px;
+      margin:0;
+    }
+    .sub{color:var(--muted); font-size:12px; margin-top:6px}
+    .kpi{display:flex; flex-direction:column; gap:8px}
+    .kpi .delta{font-size:12px}
+    .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .tableWrap{overflow:auto;border-radius:14px;border:1px solid var(--line)}
+    table{border-collapse:collapse; width:100%; min-width:0; background: rgba(0,0,0,.10)}
+    th, td{padding:10px 10px; border-bottom:1px solid var(--line); font-size:13px}
+    th{position:sticky; top:0; background: rgba(11,18,32,.92); text-align:left; color:var(--muted)}
+    tr:hover td{background: rgba(255,255,255,.04)}
+    .pill{
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      white-space:nowrap;
+    }
+    .pill.ing{border-color: rgba(87,211,140,.35); background: rgba(87,211,140,.12)}
+    .pill.egr{border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.12)}
+    .pill.mov{border-color: rgba(255,209,102,.35); background: rgba(255,209,102,.12)}
+    .bar{
+      height:10px; border-radius:999px; background: rgba(255,255,255,.07);
+      overflow:hidden; border:1px solid var(--line);
+    }
+    .bar > i{display:block;height:100%; width:0%}
+    .bar.ok > i{background: rgba(87,211,140,.65)}
+    .bar.bad > i{background: rgba(255,107,107,.65)}
+    .bar.warn > i{background: rgba(255,209,102,.65)}
+    .hint{font-size:12px;color:var(--muted);line-height:1.35}
+    .sectionTitle{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin:14px 2px 8px 2px;
+    }
+    .sectionTitle b{font-size:14px}
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:18px; padding:12px 14px;
+      background: rgba(15,27,51,.92);
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      color:var(--text);
+      font-size:13px;
+      display:none;
+      max-width: min(680px, calc(100vw - 24px));
+    }
+    .twoCols{display:grid;gap:12px}
+    @media(min-width:980px){ .twoCols{grid-template-columns: 1fr 1fr} }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    /* --- Responsive: evitar scroll lateral de toda la página --- */
+    .tableWrap{max-width:100%; overflow-x:auto}
+    @media (max-width: 860px){
+      .topbar{flex-direction:column; align-items:flex-start}
+      .topbar .row{width:100%}
+      #scopeSel, #monthSel{width:100%}
+      .chip{flex:1; justify-content:center}
+    }
+    @media (max-width: 560px){
+      .wrap{padding:12px}
+      th, td{padding:9px 8px; font-size:12px}
+      .big{font-size:22px}
+    }
+  
+    /* --- Fix contraste en desplegables (select / option) --- */
+    select{
+      background-color:#0f1b33;
+      color:#eaf0ff;
+    }
+    select option{
+      background-color:#0f1b33;
+      color:#eaf0ff;
+    }
+    select option:checked{
+      background-color:#1b2f5a;
+      color:#ffffff;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <b>Finanzas</b>
+      <span>Dashboard + Registros (local, sin internet)</span>
+    </div>
+
+    <div class="row">
+      <select id="scopeSel" title="Perfil" disabled>
+        <option value="personal">Personal</option>
+      </select>
+
+      <select id="monthSel" title="Mes"></select>
+
+      <div class="row" style="gap:8px">
+        <div class="chip active" data-tab="dashboard">🏠 Dashboard</div>
+        <div class="chip" data-tab="registros">🧾 Registros</div>
+        <div class="chip" data-tab="presupuestos">🎯 Presupuestos</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard">
+
+      <div class="grid cols4">
+        <div class="card kpi">
+          <h3>Ingresos totales</h3>
+          <p class="big" id="kpiIng">$ 0</p>
+          <div class="sub" id="kpiIngSub">Presupuesto: $ 0 • Diferencia: $ 0</div>
+          <div class="bar ok"><i id="barIng"></i></div>
+        </div>
+
+        <div class="card kpi">
+          <h3>Egresos totales</h3>
+          <p class="big" id="kpiEgr">$ 0</p>
+          <div class="sub" id="kpiEgrSub">Presupuesto: $ 0 • Diferencia: $ 0</div>
+          <div class="bar bad"><i id="barEgr"></i></div>
+        </div>
+
+        <div class="card kpi">
+          <h3>Saldo del mes</h3>
+          <p class="big" id="kpiSaldo">$ 0</p>
+          <div class="sub" id="kpiSaldoSub">Ingresos − Egresos</div>
+        </div>
+
+        <div class="card kpi">
+          <h3>Movimientos</h3>
+          <p class="big" id="kpiCant">0</p>
+          <div class="sub">Registros del mes seleccionado</div>
+        </div>
+      </div>
+
+      <div class="grid cols2" style="margin-top:12px">
+        <div class="card">
+          <div class="sectionTitle">
+            <b>Resumen por categoría</b>
+            <div class="row" style="gap:8px">
+              <span class="hint">Ver:</span>
+              <select id="catTipoFilter" title="Filtrar por tipo">
+                <option value="Egreso" selected>Egresos</option>
+                <option value="Ingreso">Ingresos</option>
+                <option value="Ambos">Ambos</option>
+              </select>
+            </div>
+          </div>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Categoría</th>
+                  <th>Presupuesto</th>
+                  <th>Monto</th>
+                  <th>Dif.</th>
+                  <th>Uso</th>
+                </tr>
+              </thead>
+              <tbody id="catTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="2">TOTAL</th>
+                  <th id="catTotalPresu">—</th>
+                  <th id="catTotalMonto">—</th>
+                  <th id="catTotalDif">—</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <b>Desglose completo</b>
+            <div class="row" style="gap:8px">
+              <span class="hint">Tipo:</span>
+              <select id="detTipo">
+                <option value="Egreso" selected>Egreso</option>
+                <option value="Ingreso">Ingreso</option>
+              </select>
+              <span class="hint">Categoría:</span>
+              <select id="detCat"></select>
+            </div>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Presu.</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="detTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="2">TOTAL</th>
+                  <th id="detTotalPresu">—</th>
+                  <th id="detTotalMonto">—</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+          <div class="hint">
+            Mostramos cada ítem cargado para la categoría seleccionada. Si el monto es 0 y hay presupuesto, aparece como <b>Planificado</b>.
+          </div>
+        </div></div>
+      </div>
+
+    </section>
+
+    <!-- REGISTROS -->
+    <section id="tab-registros" style="display:none">
+
+      <div class="twoCols">
+
+        <div class="card">
+          <h3>Cargar movimiento</h3>
+
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px">
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Fecha</div>
+              <input id="inFecha" type="date"/>
+            </div>
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Mes</div>
+              <select id="inMes"></select>
+            </div>
+
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Tipo</div>
+              <select id="inTipo">
+                <option value="Ingreso">Ingreso</option>
+                <option value="Egreso">Egreso</option>
+                <option value="Movimiento">Movimiento</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Categoría</div>
+              <select id="inCat"></select>
+            </div>
+
+            <div style="grid-column: 1 / -1">
+              <div class="hint" style="margin:0 0 6px 2px">Concepto</div>
+              <input id="inConcepto" placeholder="Ej: Expensas / Sueldo / Didi / Diezmo..." />
+            </div>
+
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Presupuesto (opcional)</div>
+              <input id="inPresu" type="number" step="0.01" placeholder="0" />
+            </div>
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Monto</div>
+              <input id="inMonto" type="number" step="0.01" placeholder="0" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px; justify-content:flex-end">
+            <button class="btnGhost" id="btnLimpiar">Limpiar</button>
+            <button class="btnPrimary" id="btnGuardar">Guardar</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row" style="justify-content:space-between; align-items:flex-end">
+            <div style="flex:1; min-width:220px">
+              <div class="hint" style="margin:0 0 6px 2px">Buscar</div>
+              <input id="searchTxt" placeholder="Buscar por categoría o concepto..." style="width:100%"/>
+            </div>
+            <div class="row">
+              <button class="btnWarn" id="btnExport">Exportar JSON</button>
+              <button class="btnOk" id="btnImport">Importar JSON</button>
+              <input id="fileImport" type="file" accept="application/json" style="display:none"/>
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top:10px">
+            Esto guarda todo en tu navegador (localStorage). El export/import te permite “pasarlo” de PC a celular sin perder nada.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <b>Listado del mes</b>
+            <span class="hint">Editar o eliminar</span>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Mes</th>
+                  <th>Tipo</th>
+                  <th>Categoría</th>
+                  <th>Concepto</th>
+                  <th>Presu.</th>
+                  <th>Monto</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="regTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row" style="justify-content:flex-end">
+            <button class="btnBad" id="btnBorrarMes">Borrar todos los registros del mes</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PRESUPUESTOS -->
+    <section id="tab-presupuestos" style="display:none">
+      <div class="grid cols2">
+
+        <div class="card">
+          <h3>Presupuestos globales del mes</h3>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px">
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Presupuesto ingresos</div>
+              <input id="budIng" type="number" step="0.01" placeholder="0"/>
+            </div>
+            <div>
+              <div class="hint" style="margin:0 0 6px 2px">Presupuesto egresos</div>
+              <input id="budEgr" type="number" step="0.01" placeholder="0"/>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px; justify-content:flex-end">
+            <button class="btnPrimary" id="btnSaveBudGlobal">Guardar presupuestos globales</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="hint">
+            Esto alimenta la parte “Presupuesto / Diferencia” del Dashboard.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Presupuesto por categoría (mes)</h3>
+          <div class="row" style="gap:8px; margin-bottom:10px">
+            <select id="budTipo">
+              <option value="Ingreso">Ingreso</option>
+              <option value="Egreso">Egreso</option>
+            </select>
+            <select id="budCat"></select>
+            <input id="budMonto" type="number" step="0.01" placeholder="Monto presupuesto"/>
+            <button class="btnPrimary" id="btnAddBudCat">Agregar / Actualizar</button>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Categoría</th>
+                  <th>Presupuesto</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="budTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+          <div class="hint">
+            Si querés luego presupuesto por “Concepto” también (como en tu Excel en algunos casos), lo sumamos.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* =========================
+   CONFIG (listas tipo Excel)
+   ========================= */
+const MESES = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
+
+// Basado en tu hoja DATOS del Excel (ajustamos cuando quieras)
+const CATS_ING = ["Ahorros","Didi / Uber","Informática Lusan","Luciana","Santiago"];
+const CATS_EGR = ["Ahorro","Alimentos","ARCA","Banco Galicia","BNA","Delivery / Salidas","Deuda","Diezmo","Hogar","Informática Lusan","Mascotas","Mercado Pago","Naranja X","Servicios varios","Tarjeta Carrefour","Transporte","Vacaciones"];
+const CATS_MOV = ["Transferencia","Ajuste","Otro"];
+
+/* =========================
+   STORAGE (Personal vs JBN)
+   ========================= */
+const KEY = (scope) => `finanzas_v1_${scope}`;
+
+function defaultData(){
+  return {
+    registros: [], // {id, fechaISO, mes, tipo, categoria, concepto, presupuesto, monto}
+    presupuestos: {
+      global: {},  // global[mes] = {ing: number, egr: number}
+      porCat: {}   // porCat[mes] = { "Ingreso|Santiago": number, "Egreso|Hogar": number, ... }
+    }
+  };
+}
+
+function loadData(scope){
+  const raw = localStorage.getItem(KEY(scope));
+  if(!raw) return defaultData();
+  try{
+    const d = JSON.parse(raw);
+    // compat mínima
+    if(!d.registros) d.registros = [];
+    if(!d.presupuestos) d.presupuestos = {global:{}, porCat:{}};
+    if(!d.presupuestos.global) d.presupuestos.global = {};
+    if(!d.presupuestos.porCat) d.presupuestos.porCat = {};
+    return d;
+  }catch(e){
+    return defaultData();
+  }
+}
+function saveData(scope, data){
+  localStorage.setItem(KEY(scope), JSON.stringify(data));
+}
+
+function money(n){
+  const x = Number(n || 0);
+  return x.toLocaleString("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:2});
+}
+function num(n){ return Number(n || 0); }
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.style.display="none", 2400);
+}
+
+function uid(){
+  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+/* =========================
+   UI ELEMENTS
+   ========================= */
+const scopeSel = document.getElementById("scopeSel");
+const monthSel = document.getElementById("monthSel");
+const inMes = document.getElementById("inMes");
+const inTipo = document.getElementById("inTipo");
+const inCat = document.getElementById("inCat");
+const inFecha = document.getElementById("inFecha");
+const inConcepto = document.getElementById("inConcepto");
+const inPresu = document.getElementById("inPresu");
+const inMonto = document.getElementById("inMonto");
+const searchTxt = document.getElementById("searchTxt");
+
+const catTipoFilter = document.getElementById("catTipoFilter");
+const detTipo = document.getElementById("detTipo");
+const detCat = document.getElementById("detCat");
+
+
+const budIng = document.getElementById("budIng");
+const budEgr = document.getElementById("budEgr");
+const budTipo = document.getElementById("budTipo");
+const budCat = document.getElementById("budCat");
+const budMonto = document.getElementById("budMonto");
+
+const chips = [...document.querySelectorAll(".chip")];
+const tabs = {
+  dashboard: document.getElementById("tab-dashboard"),
+  registros: document.getElementById("tab-registros"),
+  presupuestos: document.getElementById("tab-presupuestos"),
+};
+
+let scope = 'personal';
+let data = loadData(scope);
+
+/* =========================
+   INIT
+   ========================= */
+(function init(){
+  // mes actual por defecto
+  const now = new Date();
+  const m = MESES[now.getMonth()];
+  fillMonths(monthSel, m);
+  fillMonths(inMes, m);
+
+  // fecha hoy
+  inFecha.valueAsDate = now;
+
+  // categorías iniciales
+  refreshCatOptions();
+
+  // presupuestos tab init
+  refreshBudCatOptions();
+  loadBudInputs();
+  refreshDetCatOptions();
+
+  // render inicial
+  renderAll();
+
+  // listeners
+  scopeSel.addEventListener("change", ()=>{
+    scope = scopeSel.value;
+    data = loadData(scope);
+    loadBudInputs();
+    renderAll();
+    toast('Perfil: Personal');
+  });
+
+  monthSel.addEventListener("change", ()=>{
+    inMes.value = monthSel.value;
+    loadBudInputs();
+    renderAll();
+    refreshDetCatOptions();
+  });
+  inMes.addEventListener("change", ()=>{
+    monthSel.value = inMes.value;
+    loadBudInputs();
+    renderAll();
+    refreshDetCatOptions();
+  });
+
+  inTipo.addEventListener("change", ()=>{
+    refreshCatOptions();
+  });
+
+  searchTxt.addEventListener("input", ()=> renderRegistros());
+
+  if(catTipoFilter){
+    catTipoFilter.addEventListener("change", ()=> renderDashboard());
+  }
+  if(detTipo){
+    detTipo.addEventListener("change", ()=>{
+      refreshDetCatOptions();
+      renderDetailTable();
+    });
+  }
+  if(detCat){
+    detCat.addEventListener("change", ()=> renderDetailTable());
+  }
+
+  document.getElementById("btnGuardar").addEventListener("click", onSaveRegistro);
+  document.getElementById("btnLimpiar").addEventListener("click", clearForm);
+
+  document.getElementById("btnBorrarMes").addEventListener("click", ()=>{
+    const mes = monthSel.value;
+    const before = data.registros.length;
+    data.registros = data.registros.filter(r => r.mes !== mes);
+    saveData(scope, data);
+    renderAll();
+    toast(`Borrados ${before - data.registros.length} registros de ${mes}`);
+  });
+
+  // tabs
+  chips.forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      chips.forEach(x=>x.classList.remove("active"));
+      ch.classList.add("active");
+      const t = ch.dataset.tab;
+      Object.keys(tabs).forEach(k => tabs[k].style.display = (k===t) ? "" : "none");
+      // refrescar
+      if(t==="presupuestos"){ refreshBudList(); }
+    });
+  });
+
+  // presupuestos
+  document.getElementById("btnSaveBudGlobal").addEventListener("click", ()=>{
+    const mes = monthSel.value;
+    if(!data.presupuestos.global[mes]) data.presupuestos.global[mes] = {ing:0, egr:0};
+    data.presupuestos.global[mes].ing = num(budIng.value);
+    data.presupuestos.global[mes].egr = num(budEgr.value);
+    saveData(scope, data);
+    renderDashboard();
+    toast("Presupuestos globales guardados");
+  });
+
+  budTipo.addEventListener("change", ()=>{
+    refreshBudCatOptions();
+  });
+
+  document.getElementById("btnAddBudCat").addEventListener("click", ()=>{
+    const mes = monthSel.value;
+    const tipo = budTipo.value;
+    const cat = budCat.value;
+    const monto = num(budMonto.value);
+    if(!cat){ toast("Elegí una categoría"); return; }
+    if(monto <= 0){ toast("Ingresá un monto mayor a 0"); return; }
+
+    if(!data.presupuestos.porCat[mes]) data.presupuestos.porCat[mes] = {};
+    data.presupuestos.porCat[mes][`${tipo}|${cat}`] = monto;
+
+    saveData(scope, data);
+    refreshBudList();
+    renderDashboard();
+    budMonto.value = "";
+    toast("Presupuesto por categoría guardado");
+  });
+
+  // export/import
+  document.getElementById("btnExport").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `finanzas_${scope}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById("btnImport").addEventListener("click", ()=>{
+    document.getElementById("fileImport").click();
+  });
+
+  document.getElementById("fileImport").addEventListener("change", async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const txt = await file.text();
+    try{
+      const incoming = JSON.parse(txt);
+      // validación suave
+      if(!incoming.registros || !incoming.presupuestos) throw new Error("Formato inválido");
+      data = incoming;
+      saveData(scope, data);
+      loadBudInputs();
+      renderAll();
+      toast("Importación OK");
+    }catch(err){
+      toast("No se pudo importar: archivo inválido");
+    }finally{
+      e.target.value = "";
+    }
+  });
+
+  // Autocompletar mes según fecha
+  inFecha.addEventListener("change", ()=>{
+    const d = inFecha.value ? new Date(inFecha.value+"T00:00:00") : null;
+    if(!d) return;
+    const mes = MESES[d.getMonth()];
+    inMes.value = mes;
+    monthSel.value = mes;
+    loadBudInputs();
+    renderAll();
+  });
+})();
+
+function fillMonths(sel, selected){
+  sel.innerHTML = "";
+  MESES.forEach(m=>{
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m;
+    if(m === selected) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function refreshCatOptions(){
+  const tipo = inTipo.value;
+  let list = [];
+  if(tipo==="Ingreso") list = CATS_ING;
+  else if(tipo==="Egreso") list = CATS_EGR;
+  else list = CATS_MOV;
+
+  inCat.innerHTML = "";
+  list.forEach(c=>{
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    inCat.appendChild(o);
+  });
+}
+
+function refreshBudCatOptions(){
+  const tipo = budTipo.value;
+  const list = (tipo==="Ingreso") ? CATS_ING : CATS_EGR;
+  budCat.innerHTML = "";
+  list.forEach(c=>{
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    budCat.appendChild(o);
+  });
+}
+function refreshDetCatOptions(){
+  if(!detTipo || !detCat) return;
+  const mes = monthSel.value;
+  const tipo = detTipo.value;
+  const regs = getMonthRegs(mes).filter(r => r.tipo === tipo);
+
+  // categorías desde registros (si hay); si no, usamos las listas fijas
+  let cats = [...new Set(regs.map(r => r.categoria))].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+  if(cats.length === 0){
+    cats = (tipo === "Ingreso") ? CATS_ING.slice() : CATS_EGR.slice();
+  }
+
+  const current = detCat.value;
+  detCat.innerHTML = "";
+  cats.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=c; o.textContent=c;
+    detCat.appendChild(o);
+  });
+
+  // mantener selección si existe
+  if(current && cats.includes(current)) detCat.value = current;
+  else detCat.value = cats[0] || "";
+
+  // render al refrescar
+  renderDetailTable();
+}
+
+function renderDetailTable(){
+  const mes = monthSel.value;
+  if(!detTipo || !detCat) return;
+
+  const tipo = detTipo.value;
+  const cat = detCat.value;
+
+  const regs = getMonthRegs(mes)
+    .filter(r => r.tipo === tipo && r.categoria === cat)
+    .sort((a,b)=> (a.fechaISO < b.fechaISO ? 1 : -1));
+
+  const rows = regs.map(r=>{
+    const planned = num(r.monto) === 0 && num(r.presupuesto) !== 0;
+    const estado = planned ? '<span class="pill mov">Planificado</span>' : '<span class="pill ing">Real</span>';
+    return `
+      <tr>
+        <td class="mono">${r.fechaISO}</td>
+        <td>${escapeHtml(r.concepto)}</td>
+        <td>${money(r.presupuesto||0)}</td>
+        <td>${money(r.monto||0)}</td>
+        <td>${estado}</td>
+      </tr>
+    `;
+  });
+
+  const totalPresu = regs.reduce((a,r)=> a + num(r.presupuesto), 0);
+  const totalMonto = regs.reduce((a,r)=> a + num(r.monto), 0);
+
+  const body = document.getElementById("detTbody");
+  if(body){
+    body.innerHTML = rows.join("") || `
+      <tr><td colspan="5" class="hint">No hay ítems para ${tipo} • ${escapeHtml(cat)} en ${mes}.</td></tr>
+    `;
+  }
+
+  const tp = document.getElementById("detTotalPresu");
+  const tm = document.getElementById("detTotalMonto");
+  if(tp) tp.textContent = money(totalPresu);
+  if(tm) tm.textContent = money(totalMonto);
+}
+
+
+/* =========================
+   SAVE / EDIT / DELETE
+   ========================= */
+function clearForm(){
+  inConcepto.value = "";
+  inPresu.value = "";
+  inMonto.value = "";
+  inTipo.value = "Ingreso";
+  refreshCatOptions();
+  inFecha.valueAsDate = new Date();
+  const mes = monthSel.value;
+  inMes.value = mes;
+}
+
+function onSaveRegistro(){
+  const fechaISO = inFecha.value;
+  const mes = inMes.value;
+  const tipo = inTipo.value;
+  const categoria = inCat.value;
+  const concepto = (inConcepto.value || "").trim();
+  const presupuesto = num(inPresu.value);
+  const monto = num(inMonto.value);
+
+  if(!fechaISO){ toast("Falta la fecha"); return; }
+  if(!mes){ toast("Falta el mes"); return; }
+  if(!tipo){ toast("Falta el tipo"); return; }
+  if(!categoria){ toast("Falta la categoría"); return; }
+  if(!concepto){ toast("Falta el concepto"); return; }
+  if(monto === 0 && presupuesto === 0){ toast("Ingresá un monto o un presupuesto (no ambos en 0)"); return; }
+
+  const reg = { id: uid(), fechaISO, mes, tipo, categoria, concepto, presupuesto, monto };
+  data.registros.push(reg);
+  saveData(scope, data);
+
+  renderAll();
+  clearForm();
+  toast("Movimiento guardado");
+}
+
+function deleteRegistro(id){
+  data.registros = data.registros.filter(r=>r.id!==id);
+  saveData(scope, data);
+  renderAll();
+  toast("Registro eliminado");
+}
+
+function editRegistro(id){
+  const r = data.registros.find(x=>x.id===id);
+  if(!r) return;
+
+  // Cargar en form
+  inFecha.value = r.fechaISO;
+  inMes.value = r.mes;
+  monthSel.value = r.mes;
+  inTipo.value = r.tipo;
+  refreshCatOptions();
+  inCat.value = r.categoria;
+  inConcepto.value = r.concepto;
+  inPresu.value = r.presupuesto ?? "";
+  inMonto.value = r.monto ?? "";
+
+  // Al guardar, eliminamos el original y lo reemplazás
+  deleteRegistro(id);
+  toast("Editando: ajustá y volvé a Guardar");
+}
+
+/* =========================
+   RENDER
+   ========================= */
+function renderAll(){
+  renderDashboard();
+  renderRegistros();
+  refreshBudList();
+}
+
+function getMonthRegs(mes){
+  return data.registros.filter(r=>r.mes===mes);
+}
+
+function sumByTipo(regs, tipo){
+  return regs
+    .filter(r=>r.tipo===tipo)
+    .reduce((acc,r)=> acc + num(r.monto), 0);
+}
+
+function sumPresuByTipo(regs, tipo){
+  return regs
+    .filter(r=>r.tipo===tipo)
+    .reduce((acc,r)=> acc + num(r.presupuesto), 0);
+}
+
+function sumPresuByTipoCat(regs, tipo, cat){
+  return regs
+    .filter(r=>r.tipo===tipo && r.categoria===cat)
+    .reduce((acc,r)=> acc + num(r.presupuesto), 0);
+}
+
+function getBudGlobal(mes){
+  const b = data.presupuestos.global[mes] || {ing:0, egr:0};
+  return { ing:num(b.ing), egr:num(b.egr) };
+}
+
+function getBudCat(mes, tipo, cat){
+  const map = data.presupuestos.porCat[mes] || {};
+  return num(map[`${tipo}|${cat}`] || 0);
+}
+
+function renderDashboard(){
+  const mes = monthSel.value;
+  const regs = getMonthRegs(mes);
+
+  const totalIng = sumByTipo(regs, "Ingreso");
+  const totalEgr = sumByTipo(regs, "Egreso");
+  const saldo = totalIng - totalEgr;
+
+  // Presupuesto/Plan: si cargás presupuestos en Registros (presupuesto>0), se usan como referencia.
+  // Si no hay presupuestos cargados en registros, se usa el Presupuesto Global del tab “Presupuestos”.
+  const budGlobal = getBudGlobal(mes);
+  const planIngRegs = sumPresuByTipo(regs, "Ingreso");
+  const planEgrRegs = sumPresuByTipo(regs, "Egreso");
+  const planIng = planIngRegs > 0 ? planIngRegs : budGlobal.ing;
+  const planEgr = planEgrRegs > 0 ? planEgrRegs : budGlobal.egr;
+  const difIng = totalIng - planIng;
+  const difEgr = totalEgr - planEgr;
+
+  document.getElementById("kpiIng").textContent = money(totalIng);
+  document.getElementById("kpiEgr").textContent = money(totalEgr);
+  document.getElementById("kpiSaldo").textContent = money(saldo);
+  document.getElementById("kpiCant").textContent = regs.length;
+
+  document.getElementById("kpiIngSub").textContent =
+    `Presupuesto: ${money(planIng)} • Diferencia: ${money(difIng)}`;
+
+  document.getElementById("kpiEgrSub").textContent =
+    `Presupuesto: ${money(planEgr)} • Diferencia: ${money(difEgr)}`;
+
+  // barras (uso sobre presupuesto)
+  const ingPct = (planIng>0) ? Math.min(100, (totalIng/planIng)*100) : 0;
+  const egrPct = (planEgr>0) ? Math.min(100, (totalEgr/planEgr)*100) : 0;
+  document.getElementById("barIng").style.width = `${ingPct}%`;
+  document.getElementById("barEgr").style.width = `${egrPct}%`;
+
+
+  // tabla categorías (filtrable)
+  const filtro = catTipoFilter ? catTipoFilter.value : "Egreso";
+  const tipos = (filtro === "Ambos") ? ["Ingreso","Egreso"] : [filtro];
+
+  // key tipo|cat -> {monto, presu}
+  const cats = new Map();
+  regs.forEach(r=>{
+    if(r.tipo!=="Ingreso" && r.tipo!=="Egreso") return;
+    if(!tipos.includes(r.tipo)) return;
+
+    const key = `${r.tipo}|${r.categoria}`;
+    const cur = cats.get(key) || {monto:0, presu:0};
+    cur.monto += Math.abs(num(r.monto));        // real
+    cur.presu += Math.abs(num(r.presupuesto));  // planificado
+    cats.set(key, cur);
+  });
+
+  const catRows = [];
+  let sumPresu = 0, sumMonto = 0, sumDif = 0;
+
+  const entries = [...cats.entries()].sort((a,b)=> (b[1].monto - a[1].monto));
+  for(const [key, obj] of entries){
+    const [tipo, cat] = key.split("|");
+    const monto = obj.monto;
+    // Presupuesto: si no cargaste en registro, tomamos presupuesto por categoría
+    const presuRegs = obj.presu;
+    const presuCfg = getBudCat(mes, tipo, cat);
+    const presu = presuRegs > 0 ? presuRegs : presuCfg;
+
+    const dif = monto - presu;
+    const uso = presu>0 ? (monto/presu) : 0;
+
+    sumPresu += presu;
+    sumMonto += monto;
+    sumDif += dif;
+
+    catRows.push(`
+      <tr>
+        <td><span class="pill ${tipo==="Ingreso"?"ing":"egr"}">${tipo}</span></td>
+        <td>${escapeHtml(cat)}</td>
+        <td>${money(presu)}</td>
+        <td>${money(monto)}</td>
+        <td class="${dif>=0 ? (tipo==="Ingreso"?"ok":"bad") : (tipo==="Ingreso"?"bad":"ok")}">${money(dif)}</td>
+        <td>
+          <div class="bar ${uso<=1 ? "ok" : uso<=1.1 ? "warn" : "bad"}">
+            <i style="width:${Math.min(100, uso*100)}%"></i>
+          </div>
+          <div class="hint" style="margin-top:6px">${presu>0 ? Math.round(uso*100)+"%" : "—"}</div>
+        </td>
+      </tr>
+    `);
+  }
+
+  const catBody = document.getElementById("catTbody");
+  if(catBody){
+    catBody.innerHTML = catRows.join("") || `
+      <tr><td colspan="6" class="hint">Sin datos en ${mes}. Cargá movimientos en “Registros”.</td></tr>
+    `;
+  }
+
+  const tPresu = document.getElementById("catTotalPresu");
+  const tMonto = document.getElementById("catTotalMonto");
+  const tDif = document.getElementById("catTotalDif");
+  if(tPresu) tPresu.textContent = money(sumPresu);
+  if(tMonto) tMonto.textContent = money(sumMonto);
+  if(tDif) tDif.textContent = money(sumDif);
+
+  // Desglose completo (panel derecho)
+  refreshDetCatOptions();
+
+}
+
+function renderRegistros(){
+  const mes = monthSel.value;
+  const q = (searchTxt.value || "").trim().toLowerCase();
+  const regs = getMonthRegs(mes)
+    .filter(r=>{
+      if(!q) return true;
+      return (r.categoria||"").toLowerCase().includes(q) || (r.concepto||"").toLowerCase().includes(q);
+    })
+    .sort((a,b)=> (a.fechaISO < b.fechaISO ? 1 : -1)); // más nuevo arriba
+
+  const rows = regs.map(r=>{
+    const pillClass = r.tipo==="Ingreso" ? "ing" : r.tipo==="Egreso" ? "egr" : "mov";
+    return `
+      <tr>
+        <td class="mono">${r.fechaISO}</td>
+        <td>${escapeHtml(r.mes)}</td>
+        <td><span class="pill ${pillClass}">${escapeHtml(r.tipo)}</span></td>
+        <td>${escapeHtml(r.categoria)}</td>
+        <td>${escapeHtml(r.concepto)}</td>
+        <td>${money(r.presupuesto||0)}</td>
+        <td>${money(r.monto||0)}</td>
+        <td>
+          <button class="btnGhost" onclick="editRegistro('${r.id}')">Editar</button>
+          <button class="btnBad" onclick="deleteRegistro('${r.id}')">Eliminar</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("regTbody").innerHTML = rows.join("") || `
+    <tr><td colspan="8" class="hint">No hay registros para ${mes}.</td></tr>
+  `;
+}
+
+function loadBudInputs(){
+  const mes = monthSel.value;
+  const b = getBudGlobal(mes);
+  budIng.value = b.ing || "";
+  budEgr.value = b.egr || "";
+  refreshBudList();
+}
+
+function refreshBudList(){
+  const mes = monthSel.value;
+  const map = data.presupuestos.porCat[mes] || {};
+  const entries = Object.entries(map)
+    .map(([k,v])=> ({k, v:num(v)}))
+    .sort((a,b)=> b.v - a.v);
+
+  const rows = entries.map(({k,v})=>{
+    const [tipo, cat] = k.split("|");
+    return `
+      <tr>
+        <td><span class="pill ${tipo==="Ingreso"?"ing":"egr"}">${tipo}</span></td>
+        <td>${escapeHtml(cat)}</td>
+        <td>${money(v)}</td>
+        <td>
+          <button class="btnBad" onclick="removeBud('${escapeAttr(k)}')">Quitar</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("budTbody").innerHTML = rows.join("") || `
+    <tr><td colspan="4" class="hint">Sin presupuestos por categoría en ${mes}.</td></tr>
+  `;
+}
+function removeBud(key){
+  const mes = monthSel.value;
+  if(!data.presupuestos.porCat[mes]) return;
+  delete data.presupuestos.porCat[mes][key];
+  saveData(scope, data);
+  refreshBudList();
+  renderDashboard();
+  toast("Presupuesto quitado");
+}
+
+/* =========================
+   Helpers
+   ========================= */
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function escapeAttr(s){
+  return String(s ?? "").replaceAll("'","\\'");
+}
+
+// Exponer funciones para onclick
+window.deleteRegistro = deleteRegistro;
+window.editRegistro = editRegistro;
+window.removeBud = removeBud;
+</script>
+
+</body>
+</html>
